@@ -1,7 +1,7 @@
-import simplifyBook
 import textFeatures
 import csv
-import panda as pd
+import numpy as np
+import pandas as pd
 
 # open files of text by Oscar Wilde (OW)
 
@@ -38,5 +38,31 @@ for i in range(0,4):
     for j in range(0,4):
         writer.writerow(textFeatures.compare_features_diff(authorA[i], authorB[j]))
 
+datafile.close()
+
 #naivebayes implementation
-data = pd.read_csv('dataset.csv')
+
+from sklearn.naive_bayes import GaussianNB
+from sklearn.model_selection import train_test_split
+
+
+dataframe = pd.read_csv("dataset.csv", sep=',')
+
+X_train, X_test = train_test_split(dataframe, test_size=0.5)
+
+gnb = GaussianNB()
+
+features = ['lengthdiff','stddevdiff', 'richnessdiff']
+
+gnb.fit(
+    X_train[features].values,
+    X_train['sameAuthor']
+)
+y_pred = gnb.predict(X_test[features])
+
+print("Number of mislabeled points out of a total {} points : {}, performance {:05.2f}%"
+      .format(
+          X_test.shape[0],
+          (X_test['sameAuthor'] != y_pred).sum(),
+          100*(1-(X_test['sameAuthor'] != y_pred).sum()/X_test.shape[0])
+))
